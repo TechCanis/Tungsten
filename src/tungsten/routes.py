@@ -1584,7 +1584,9 @@ class Routes:
         if not host.can(ctx, "update", record):
             raise Forbidden()
         table = host.get_table(ctx).bind(ctx, host, params=QueryParams(""))
-        column = next((c for c in table._columns if isinstance(c, EditableColumn) and c.name == fd.get("column")), None)
+        ev = table.ev()  # a column hidden from this user with visible()/hidden() can't be saved either
+        column = next((c for c in table._columns if isinstance(c, EditableColumn) and c.name == fd.get("column")
+                       and c.is_visible(**ev)), None)
         if column is None:
             raise NotFound()
         if "value" in fd:

@@ -532,3 +532,23 @@ def test_huge_record_key_is_404(admin):
     assert admin.get(f"/admin/products/{big}").status_code == 404
     assert admin.get(f"/admin/products/{big}/edit").status_code == 404
     assert admin.get(f"/admin/_tw/exports/{big}/download").status_code == 404
+
+
+def test_hidden_editable_column_cannot_be_saved(admin, panel, monkeypatch):
+    from examples.shop.models import Category
+    from tungsten.tables.columns import ToggleColumn
+
+    original = ToggleColumn.__init__
+
+    def init(self, name, *args, **kwargs):
+        original(self, name, *args, **kwargs)
+        if name == "is_visible":
+            self.visible(False)
+
+    monkeypatch.setattr(ToggleColumn, "__init__", init)
+    with db_session(panel) as db:
+        before = db.get(Category, 1).is_visible
+    admin.get("/admin/categories")
+    admin.post("/admin/_tw/toggle", {"host": "resource:categories", "record": "1", "column": "is_visible"})
+    with db_session(panel) as db:
+        assert db.get(Category, 1).is_visible == before
