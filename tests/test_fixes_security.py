@@ -494,3 +494,15 @@ def test_product_table_export_unchanged(admin, panel):
     r = admin.get("/admin/_tw/export?host=resource:products&format=csv&keys=1")
     with db_session(panel) as db:
         assert db.get(Product, 1).name in r.content.decode("utf-8-sig")
+
+
+# ---------------------------------------------------------------------- storage paths, imports, big keys, hidden columns
+
+
+def test_storage_path_stays_inside_root(panel):
+    root = panel.storage.root.resolve()
+    sibling = root.parent / (root.name + "-backups")  # shares the root's name as a prefix
+    sibling.mkdir(parents=True)
+    (sibling / "db.csv").write_text("secret")
+    with pytest.raises(ValueError):
+        panel.storage.path(f"../{root.name}-backups/db.csv")

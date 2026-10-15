@@ -69,8 +69,9 @@ class LocalStorage(Storage):
         return str(rel_dir / name).replace(os.sep, "/")
 
     def path(self, path: str) -> Path:
-        full = (self.root / path).resolve()
-        if not str(full).startswith(str(self.root.resolve())):
+        root = self.root.resolve()
+        full = (root / path).resolve()
+        if not full.is_relative_to(root):  # a string prefix check lets "../tungsten-backups/x" through
             raise ValueError("Invalid path")
         return full
 
