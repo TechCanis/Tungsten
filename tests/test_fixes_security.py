@@ -506,3 +506,12 @@ def test_storage_path_stays_inside_root(panel):
     (sibling / "db.csv").write_text("secret")
     with pytest.raises(ValueError):
         panel.storage.path(f"../{root.name}-backups/db.csv")
+
+
+def test_exports_folder_is_private_in_any_case(admin, panel, tmp_path):
+    import io
+
+    stored = panel.storage.save(io.BytesIO(b"secret"), "x.csv", "exports")
+    name = stored.split("/", 1)[1]
+    for folder in ("exports", "Exports", "EXPORTS"):
+        assert admin.get(f"/admin/storage/{folder}/{name}").status_code == 404

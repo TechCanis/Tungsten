@@ -698,7 +698,8 @@ class Routes:
         try:
             full = storage.path(path)
             # background export files are only served to their owner (see export_file)
-            if full.relative_to(storage.root.resolve()).parts[:1] == ("exports",):
+            # lower(): on macOS/Windows "Exports/x.csv" opens the same file
+            if [p.lower() for p in full.relative_to(storage.root.resolve()).parts[:1]] == ["exports"]:
                 return Response(status_code=404)
         except (ValueError, AttributeError):
             return Response(status_code=404)
