@@ -37,9 +37,12 @@ class Host:
     def _typed_key(self, key: Any) -> Any:
         pk = self.primary_key()
         try:
-            return pk.type.python_type(key)
+            typed = pk.type.python_type(key)
         except (TypeError, ValueError, NotImplementedError):
             return key
+        if isinstance(typed, int) and not -2**63 <= typed < 2**63:
+            return None  # matches no row (a 404) instead of an OverflowError from the driver
+        return typed
 
     def base_query(self, ctx: "Context"):
         return select(self.model)

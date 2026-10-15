@@ -525,3 +525,10 @@ def test_import_only_reads_and_deletes_import_uploads(admin, panel):
                                          "_tw_name": "import", "file": other})
     assert "Not allowed" in r.headers["HX-Trigger"]
     assert panel.storage.path(other).exists()
+
+
+def test_huge_record_key_is_404(admin):
+    big = "99999999999999999999"
+    assert admin.get(f"/admin/products/{big}").status_code == 404
+    assert admin.get(f"/admin/products/{big}/edit").status_code == 404
+    assert admin.get(f"/admin/_tw/exports/{big}/download").status_code == 404

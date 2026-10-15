@@ -2259,7 +2259,7 @@ class Routes:
     def export_file(self, ctx: Context, fd: Any, job_id: int) -> Response:
         from .models import Job
 
-        job = ctx.db.get(Job, job_id)
+        job = ctx.db.get(Job, job_id) if -2**63 <= job_id < 2**63 else None
         if job is None or job.kind != "export" or ctx.user is None:
             raise NotFound()
         if job.user_id != self.panel.auth.user_id(ctx.user):
