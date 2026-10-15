@@ -663,7 +663,11 @@ class ImportAction(Action):
 
         storage = ctx.panel.storage
         path = (data or {}).get("file")
-        content = storage.path(path).read_bytes()
+        full = storage.path(path)
+        # the path comes back from the browser (#86); only read and delete files from the upload folder
+        if full.relative_to(storage.root.resolve()).parts[:1] != ("imports",):
+            raise PermissionError("Not an import upload")
+        content = full.read_bytes()
         rows = read_table(content, path)
         created, updated, failures = run_import(ctx, self.importer, rows)
         storage.delete(path)

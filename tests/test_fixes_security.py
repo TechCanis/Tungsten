@@ -515,3 +515,13 @@ def test_exports_folder_is_private_in_any_case(admin, panel, tmp_path):
     name = stored.split("/", 1)[1]
     for folder in ("exports", "Exports", "EXPORTS"):
         assert admin.get(f"/admin/storage/{folder}/{name}").status_code == 404
+
+
+def test_import_only_reads_and_deletes_import_uploads(admin, panel):
+    import io
+
+    other = panel.storage.save(io.BytesIO(b"name\nsomeone's file\n"), "photo.csv", "products")
+    r = admin.post("/admin/_tw/action", {"_tw_host": "resource:products", "_tw_scope": "table",
+                                         "_tw_name": "import", "file": other})
+    assert "Not allowed" in r.headers["HX-Trigger"]
+    assert panel.storage.path(other).exists()
